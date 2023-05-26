@@ -1,0 +1,106 @@
+FROM php:8.2-apache
+
+#ZONA HORARIA
+## RUN apt-get update && apt-get install tzdata -y && ln -s /usr/share/zoneinfo/America/Lima /etc/localtime
+
+
+RUN rm /etc/localtime
+RUN ln -s /usr/share/zoneinfo/America/Lima /etc/localtime
+RUN echo "date.timezone = America/Lima" > /usr/local/etc/php/conf.d/timezone.ini
+
+#soporte ldap
+### RUN apt-get update && apt-get install libldap2-dev -y && \
+###    rm -rf /var/lib/apt/lists/* && \
+###    docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ && \
+###    docker-php-ext-install ldap
+
+#soporte postgres
+#RUN apt-get update && apt install postgresql-client libpq-dev && docker-php-ext-install pdo pdo_pgsql
+
+### RUN apt-get update -y && apt install postgresql-client libpq-dev -y && docker-php-ext-install pdo pdo_pgsql
+### RUN apt-get update && apt-get install -y libpq-dev && docker-php-ext-install pdo pdo_pgsql
+
+#soporte mysql
+### RUN apt-get update && apt install default-mysql-client -y && docker-php-ext-install mysqli pdo pdo_mysql 
+
+### RUN apachectl restart
+
+
+
+ENV ACCEPT_EULA=Y
+
+# Install prerequisites required for tools and extensions installed later on.
+RUN apt-get update \
+    && apt-get install -y apt-transport-https gnupg2 libpng-dev libzip-dev nano unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install prerequisites for the sqlsrv and pdo_sqlsrv PHP extensions.
+# Some packages are pinned with lower priority to prevent build issues due to package conflicts.
+# Link: https://github.com/microsoft/linux-package-repositories/issues/39
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && echo "Package: unixodbc\nPin: origin \"packages.microsoft.com\"\nPin-Priority: 100\n" >> /etc/apt/preferences.d/microsoft \
+    && echo "Package: unixodbc-dev\nPin: origin \"packages.microsoft.com\"\nPin-Priority: 100\n" >> /etc/apt/preferences.d/microsoft \
+    && echo "Package: libodbc1:amd64\nPin: origin \"packages.microsoft.com\"\nPin-Priority: 100\n" >> /etc/apt/preferences.d/microsoft \
+    && echo "Package: odbcinst\nPin: origin \"packages.microsoft.com\"\nPin-Priority: 100\n" >> /etc/apt/preferences.d/microsoft \
+    && echo "Package: odbcinst1debian2:amd64\nPin: origin \"packages.microsoft.com\"\nPin-Priority: 100\n" >> /etc/apt/preferences.d/microsoft \
+    && apt-get update \
+    && apt-get install -y msodbcsql18 mssql-tools18 unixodbc-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+
+RUN pecl install sqlsrv pdo_sqlsrv
+#RUN printf "; priority=20\nextension=sqlsrv.so\n" > /etc/apache2/mods-available/sqlsrv.ini \
+#    && printf "; priority=30\nextension=pdo_sqlsrv.so\n" > /etc/apache2/mods-available/pdo_sqlsrv.ini ## \
+
+##    && phpenmod -v 8.2 sqlsrv pdo_sqlsrv
+##RUN docker-php-ext-install pcntl bcmath gd \
+#    && pecl install sqlsrv pdo_sqlsrv \
+RUN docker-php-ext-enable sqlsrv pdo_sqlsrv 
+
+
+RUN apachectl restart
+
+# Env variables
+
+
+#### ENV ACCEPT_EULA=Y
+
+#### RUN apt-get update -y \
+####    && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
+####    && locale.gen
+### INSTALL DRIVERS SQLSRV
+## RUN apt-get update -y \
+#    && sudo pecl install sqlsrv \
+#    && sudo pecl install pdo_sqlsrv \
+#    && printf "; priority=20\nextension=sqlsrv.so\n" > /etc/apache2/mods-available/sqlsrv.ini \
+#    && printf "; priority=30\nextension=pdo_sqlsrv.so\n" > /etc/apache2/mods-available/pdo_sqlsrv.ini \
+#    && sudo phpenmod sqlsrv pdo_sqlsrv
+
+
+
+
+### ENV ACCEPT_EULA=Y
+### Microsoft SQL Server Prerequisites
+##RUN apt-get update \
+##    && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+##    && curl https://packages.microsoft.com/config/debian/9/prod.list \
+##        > /etc/apt/sources.list.d/mssql-release.list \
+##    && apt-get install -y --no-install-recommends \
+##        locales \
+##        apt-transport-https \
+##    && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
+##    && locale-gen \
+##    && apt-get update \
+##    && apt-get -y --no-install-recommends install \
+##        unixodbc-dev \
+##       msodbcsql17
+
+
+
+
+##RUN apt-get update 
+##RUN docker-php-ext-install mbstring pdo pdo_mysql mysqli zip xml json ldap pdo_pgsql \
+##    && pecl install sqlsrv pdo_sqlsrv xdebug \
+##    && docker-php-ext-enable sqlsrv pdo_sqlsrv xdebug
+
