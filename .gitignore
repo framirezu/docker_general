@@ -1,3 +1,7 @@
+# Excluyendo carpetas de Volumen de los contenedores
+/miportal-win-dev/mysql
+/miportal-win-dev/html
+
 /vendor/
 node_modules/
 npm-debug.log

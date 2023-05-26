@@ -48,7 +48,6 @@ RUN docker-php-ext-enable sqlsrv pdo_sqlsrv
 RUN echo "[system_default_sect] \nMinProtocol = TLSv1 \nCipherString = DEFAULT@SECLEVEL=1" >> /etc/ssl/openssl.cnf
 
 
-
 # Reiniciar Apache.
 RUN apachectl restart
 
